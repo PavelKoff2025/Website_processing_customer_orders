@@ -1,0 +1,12 @@
+.env
+.env.bak*
+*.bak
+nginx/certs/*
+!nginx/certs/.gitkeep
+nginx/auth/*
+!nginx/auth/.gitkeep
+registry/auth/*
+!registry/auth/.gitkeep
+certbot/www/
+certbot/conf/
+*.log

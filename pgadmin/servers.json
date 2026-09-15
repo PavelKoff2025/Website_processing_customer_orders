@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Autello Postgres (internal)",
+      "Group": "Autello",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "autello",
+      "Username": "autello",
+      "SSLMode": "prefer",
+      "Comment": "Доступен только внутри internal-сети autello_db"
+    }
+  }
+}

@@ -1,0 +1,303 @@
+# =============================================================================
+#  Autello / Barskiy — закрытый контур приёма лидов
+# =============================================================================
+#  Единственная точка входа извне — Nginx (80/443 — сайт+API, 5000 — реестр).
+#  Postgres и Backend портов не публикуют: до них можно дойти только изнутри
+#  docker-сетей. Сеть `db` помечена internal — у неё нет выхода в интернет,
+#  поэтому данные клиентов физически не могут утечь наружу из БД.
+#
+#  ТРЕБОВАНИЕ К ИНСТРУМЕНТУ: только плагин `docker compose` (v2+), пишется
+#  ЧЕРЕЗ ПРОБЕЛ. Старый самостоятельный `docker-compose` (v1, через дефис)
+#  НЕ поддерживается: он иначе мерджит YAML-анкоры `<<:`, игнорирует ключ
+#  `name:` проекта и не понимает часть синтаксиса ниже. Проверка окружения —
+#  `./scripts/preflight.sh`. Установка плагина:
+#      apt-get install -y docker-compose-plugin
+#
+#  Публичные порты и режим обновления настраиваются в .env, а не здесь.
+# =============================================================================
+
+name: autello
+
+# --- общие настройки, переиспользуются через YAML-анкоры ----------------------
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+  logging: *logging
+
+networks:
+  # Периметр: только сюда смотрит Nginx, только тут есть выход в интернет.
+  edge:
+    name: autello_edge
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-autello-edge
+
+  # Контур данных: internal=true => нет NAT/шлюза во внешний мир.
+  db:
+    name: autello_db
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: br-autello-db
+
+volumes:
+  pg_data:
+    name: autello_pg_data
+  pg_dumps:
+    name: autello_pg_dumps
+  pgadmin_data:
+    name: autello_pgadmin_data
+  registry_data:
+    name: autello_registry_data
+
+services:
+
+  # ===========================================================================
+  #  NGINX — reverse proxy и единственный публичный сервис
+  # ===========================================================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: autello_nginx
+    <<: *hardening
+    # Публичные порты вынесены в .env — это те порты, по которым обращаются
+    # к приложению снаружи. Слева хост, справа порт внутри контейнера
+    # (внутренние менять не нужно).
+    ports:
+      - "${HTTP_PORT:-80}:80"      # редирект на HTTPS + ACME-челлендж
+      - "${HTTPS_PORT:-443}:443"   # сайт (лендинг + форма) и /api/ -> backend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/auth:/etc/nginx/auth:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    # Без этого worker_connections=2048 превышает лимит дескрипторов (1024).
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - edge
+    # Реестр больше не проксируется через Nginx, поэтому в зависимостях его нет.
+    depends_on:
+      pgadmin:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "--no-check-certificate", "https://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================================================
+  #  POSTGRESQL — хранилище лидов. Только сеть `db`, портов наружу нет.
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: autello_postgres
+    <<: *hardening
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: ${TZ}
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - pg_dumps:/dumps
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    shm_size: 256mb
+
+  # ===========================================================================
+  #  PGADMIN — веб-интерфейс к БД. Наружу не публикуется:
+  #  доступен только как https://<host>/pgadmin/ через Nginx (+ Basic-Auth).
+  # ===========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    container_name: autello_pgadmin
+    <<: *hardening
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_DISABLE_POSTFIX: "True"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
+      PGADMIN_CONFIG_LOGIN_BANNER: "'Autello — closed perimeter. Authorized access only.'"
+      PGADMIN_CONFIG_SESSION_COOKIE_SECURE: "True"
+      PGADMIN_CONFIG_PROXY_X_HOST_COUNT: "1"
+      PGADMIN_CONFIG_PROXY_X_PREFIX_COUNT: "1"
+      # Предзаполненное подключение к postgres (пароль вводится вручную).
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - edge   # чтобы Nginx мог проксировать
+      - db     # чтобы дойти до postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ===========================================================================
+  #  DOCKER REGISTRY — приватный реестр образов бэкенда.
+  #  Публикуется НАПРЯМУЮ на хост: http://<host>:5000, без Nginx.
+  #  Авторизация — htpasswd внутри самого реестра => работает `docker login`.
+  #
+  #  ВНИМАНИЕ: это plain HTTP. Значит:
+  #   1) на машине, откуда пушим, нужен insecure-registries в daemon.json;
+  #   2) логин/пароль уходят по сети в base64 без шифрования — порт нужно
+  #      ограничить доверенными адресами.
+  #
+  #  Ограничивать НУЖНО через цепочку DOCKER-USER, а не ufw/INPUT: Docker
+  #  сам правит iptables и опубликованные порты идут через FORWARD, минуя
+  #  INPUT, поэтому `ufw deny 5000` их НЕ закрывает. Правильно так:
+  #      iptables -I DOCKER-USER 1 -p tcp --dport 5000 ! -s <ваш-IP> -j DROP
+  #  Готовый скрипт: ./scripts/firewall-registry.sh <ваш-IP>
+  #
+  #  Вариант с TLS сохранён в nginx/conf.d/10-registry.conf.disabled.
+  #
+  #  ОБА параметра htpasswd обязательны: если не задать REALM или PATH,
+  #  registry падает с panic в handlers/app.go:314 и уходит в Restarting.
+  # ===========================================================================
+  registry:
+    image: registry:2.8
+    container_name: autello_registry
+    <<: *hardening
+    ports:
+      - "${REGISTRY_PORT:-5000}:5000"
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Autello Private Registry"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_HTTP_SECRET: ${REGISTRY_HTTP_SECRET}
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      REGISTRY_LOG_LEVEL: info
+    volumes:
+      - registry_data:/var/lib/registry
+      - ./registry/auth:/auth:ro
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ===========================================================================
+  #  WATCHTOWER — автообновление контейнеров.
+  #  Работает только по метке com.centurylinklabs.watchtower.enable=true,
+  #  чтобы случайное обновление мажорной версии Postgres не сломало данные.
+  #
+  #  Образ: поддерживаемый форк nickfedor/watchtower. Оригинальный
+  #  containrrr/watchtower архивирован и с Docker 29 не работает — его клиент
+  #  запрашивает API v1.25, а демон требует минимум v1.40. Форк умеет
+  #  автонегоциацию версии API.
+  # ===========================================================================
+  watchtower:
+    image: nickfedor/watchtower:1.22.1
+    container_name: autello_watchtower
+    <<: *hardening
+    # Интервал и ТИП ОБНОВЛЕНИЯ задаются в .env (WATCHTOWER_ARGS).
+    command: --interval ${WATCHTOWER_INTERVAL:-300} ${WATCHTOWER_ARGS:---cleanup --label-enable}
+    environment:
+      TZ: ${TZ}
+      WATCHTOWER_INCLUDE_RESTARTING: "true"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      # Креды к приватному реестру, чтобы тянуть новые образы бэкенда.
+      REPO_USER: ${REGISTRY_USER}
+      REPO_PASS: ${REGISTRY_PASSWORD}
+      # Реестр работает по plain HTTP — без этого Watchtower пытался бы HTTPS.
+      WATCHTOWER_REGISTRY_TLS_SKIP: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - edge
+
+  # ===========================================================================
+  #  BACKEND — появится позже. Портов не публикует: только сеть edge (для
+  #  Nginx) и db (для Postgres). Наружу недоступен физически.
+  # ===========================================================================
+  # backend:
+  #   image: ${REGISTRY_HOST}/autello/backend:latest
+  #   container_name: autello_backend
+  #   <<: *hardening
+  #   environment:
+  #     TZ: ${TZ}
+  #     APP_ENV: production
+  #     # Подключение к БД идёт по внутреннему DNS-имени `postgres`.
+  #     DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+  #     # Доверяем заголовкам только от Nginx.
+  #     TRUSTED_PROXIES: "autello_edge"
+  #   expose:
+  #     - "8000"          # НЕ ports! Порт виден только внутри сети edge.
+  #   networks:
+  #     - edge
+  #     - db
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   labels:
+  #     # Только бэкенд обновляется Watchtower'ом автоматически.
+  #     com.centurylinklabs.watchtower.enable: "true"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/healthz"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 20s
+
+  # ===========================================================================
+  #  CERTBOT — выпуск и продление Let's Encrypt (профиль `certs`).
+  #  Не стартует с `docker compose up -d`: только по явному вызову.
+  #      docker compose --profile certs run --rm certbot ...
+  #  Скрипт-обёртка: ./scripts/issue-certs.sh
+  # ===========================================================================
+  certbot:
+    image: certbot/certbot:v2.11.0
+    container_name: autello_certbot
+    profiles: ["certs"]
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    networks:
+      - edge
+    # entrypoint задаётся командой run; по умолчанию — certbot.
+

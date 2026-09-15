@@ -1,0 +1,18 @@
+[Unit]
+# Восстанавливает правила DOCKER-USER для порта реестра после перезагрузки.
+# Правила iptables не персистентны, а Docker при старте пересоздаёт свои
+# цепочки — поэтому юнит запускается строго ПОСЛЕ docker.service.
+Description=Autello: ограничение доступа к Docker Registry (DOCKER-USER)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/root/Autéllo_Barskiy
+# Без аргументов скрипт читает TRUSTED_REGISTRY_IPS из .env.
+ExecStart=/root/Autéllo_Barskiy/scripts/firewall-registry.sh
+ExecStop=/root/Autéllo_Barskiy/scripts/firewall-registry.sh --clear
+
+[Install]
+WantedBy=multi-user.target

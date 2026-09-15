@@ -1,0 +1,65 @@
+# =============================================================================
+#  ОТКЛЮЧЕНО. Вариант публикации реестра ЧЕРЕЗ Nginx с TLS.
+# =============================================================================
+#  Сейчас реестр публикуется напрямую контейнером registry (plain HTTP на
+#  порту 5000) — так же, как в примере преподавателя.
+#
+#  Чтобы вернуться к схеме с TLS:
+#    1) переименовать файл:  mv 10-registry.conf.disabled 10-registry.conf
+#       (Nginx подключает только *.conf, поэтому с суффиксом .disabled
+#        этот файл просто игнорируется)
+#    2) в docker-compose.yml убрать блок `ports` у сервиса registry
+#       и вернуть Nginx порт:  - "${REGISTRY_PORT:-5000}:5000"
+#    3) вернуть registry в depends_on у nginx
+#    4) у watchtower убрать WATCHTOWER_REGISTRY_TLS_SKIP и вернуть
+#       SSL_CERT_FILE: /certs/ca-bundle.crt + монтирование ca-bundle.crt
+#    5) убрать реестр из insecure-registries в /etc/docker/daemon.json
+#       и положить CA в /etc/docker/certs.d/<host>:5000/ca.crt
+# =============================================================================
+
+server {
+    listen      5000 ssl;
+    listen      [::]:5000 ssl;
+    http2       on;
+    server_name _;
+
+    include /etc/nginx/snippets/tls.conf;
+
+    # Слои образов бывают большими — размер тела не ограничиваем.
+    client_max_body_size      0;
+    chunked_transfer_encoding on;
+
+    # Обязательно для корректного определения версии API клиентом Docker.
+    add_header Docker-Distribution-Api-Version registry/2.0 always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    access_log /var/log/nginx/access.log main;
+
+    location /v2/ {
+        # Старые Docker-клиенты (< 1.6) не умеют работать с этим реестром.
+        if ($http_user_agent ~ "^(docker\/1\.(3|4|5(?!\.[0-9]-dev))|Go ).*$") {
+            return 404;
+        }
+
+        set $registry_host registry;
+        proxy_pass http://$registry_host:5000;
+
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+
+        # Push больших слоёв: не буферизуем и даём долгие таймауты.
+        proxy_request_buffering off;
+        proxy_buffering         off;
+        proxy_connect_timeout   10s;
+        proxy_send_timeout      900s;
+        proxy_read_timeout      900s;
+    }
+
+    # Ничего кроме Registry API здесь не обслуживается.
+    location / {
+        return 404;
+    }
+}
