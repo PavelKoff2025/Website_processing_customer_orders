@@ -10,3 +10,8 @@ registry/auth/*
 certbot/www/
 certbot/conf/
 *.log
+__pycache__/
+*.py[cod]
+.venv/
+frontend/node_modules/
+.vscode/
