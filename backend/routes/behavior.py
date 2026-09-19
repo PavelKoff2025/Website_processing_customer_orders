@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.security import require_admin
 from models.behavior import LeadBehaviorCRUD
 from models.lead import LeadCRUD
 
@@ -48,7 +49,10 @@ class BehaviorOut(BaseModel):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=BehaviorOut)
-def create_behavior(payload: BehaviorIn) -> dict[str, Any]:
+def create_behavior(
+    payload: BehaviorIn,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     if LeadCRUD.get_by_id(payload.id) is None:
         raise HTTPException(status_code=404, detail="Заявка для метрик не найдена.")
     if LeadBehaviorCRUD.get_by_id(payload.id) is not None:
@@ -60,12 +64,16 @@ def create_behavior(payload: BehaviorIn) -> dict[str, Any]:
 def list_behavior(
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
+    _admin: dict[str, Any] = Depends(require_admin),
 ) -> list[dict[str, Any]]:
     return LeadBehaviorCRUD.list_all(limit=limit, offset=offset)
 
 
 @router.get("/{item_id}", response_model=BehaviorOut)
-def get_behavior(item_id: int) -> dict[str, Any]:
+def get_behavior(
+    item_id: int,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     row = LeadBehaviorCRUD.get_by_id(item_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Метрики не найдены.")
@@ -73,7 +81,11 @@ def get_behavior(item_id: int) -> dict[str, Any]:
 
 
 @router.put("/{item_id}", response_model=BehaviorOut)
-def update_behavior(item_id: int, payload: BehaviorUpdate) -> dict[str, Any]:
+def update_behavior(
+    item_id: int,
+    payload: BehaviorUpdate,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     row = LeadBehaviorCRUD.update(item_id, payload.model_dump(exclude_unset=True))
     if row is None:
         raise HTTPException(status_code=404, detail="Метрики не найдены.")
@@ -81,7 +93,10 @@ def update_behavior(item_id: int, payload: BehaviorUpdate) -> dict[str, Any]:
 
 
 @router.delete("/{item_id}")
-def delete_behavior(item_id: int) -> dict[str, bool]:
+def delete_behavior(
+    item_id: int,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, bool]:
     if not LeadBehaviorCRUD.delete(item_id):
         raise HTTPException(status_code=404, detail="Метрики не найдены.")
     return {"deleted": True}

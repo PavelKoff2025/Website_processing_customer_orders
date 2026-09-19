@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.security import require_admin
 from models.admin import AdminConfigCRUD
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -40,7 +41,10 @@ class AdminOut(BaseModel):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=AdminOut)
-def create_admin(payload: AdminIn) -> dict[str, Any]:
+def create_admin(
+    payload: AdminIn,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     return AdminConfigCRUD.create(payload.model_dump())
 
 
@@ -69,7 +73,11 @@ def get_admin(item_id: int) -> dict[str, Any]:
 
 
 @router.put("/{item_id}", response_model=AdminOut)
-def update_admin(item_id: int, payload: AdminUpdate) -> dict[str, Any]:
+def update_admin(
+    item_id: int,
+    payload: AdminUpdate,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     row = AdminConfigCRUD.update(item_id, payload.model_dump(exclude_unset=True))
     if row is None:
         raise HTTPException(status_code=404, detail="Админ-конфиг не найден.")
@@ -77,7 +85,10 @@ def update_admin(item_id: int, payload: AdminUpdate) -> dict[str, Any]:
 
 
 @router.delete("/{item_id}")
-def delete_admin(item_id: int) -> dict[str, bool]:
+def delete_admin(
+    item_id: int,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, bool]:
     if not AdminConfigCRUD.delete(item_id):
         raise HTTPException(status_code=404, detail="Админ-конфиг не найден.")
     return {"deleted": True}

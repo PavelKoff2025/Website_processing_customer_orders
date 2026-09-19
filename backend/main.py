@@ -18,7 +18,15 @@ from fastapi.staticfiles import StaticFiles
 from core.db import db
 from models import schema_statements
 from models.admin import AdminConfigCRUD
-from routes import admin_router, behavior_router, leads_router
+from routes import (
+    admin_router,
+    admins_router,
+    applications_router,
+    auth_router,
+    behavior_metrics_router,
+    behavior_router,
+    leads_router,
+)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -43,8 +51,12 @@ app = FastAPI(
 )
 
 app.include_router(leads_router)
+app.include_router(applications_router)
 app.include_router(behavior_router)
+app.include_router(behavior_metrics_router)
 app.include_router(admin_router)
+app.include_router(admins_router)
+app.include_router(auth_router)
 
 
 @app.get("/docs", include_in_schema=False)

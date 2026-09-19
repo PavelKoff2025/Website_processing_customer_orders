@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autello — панель администратора</title>
+    <meta name="description" content="Вход в закрытую админ-панель Autello." />
+  </head>
+  <body class="admin-body">
+    <canvas id="gold-field" aria-hidden="true"></canvas>
+    <div class="veil"></div>
+
+    <header class="top">
+      <p class="brand">Autello</p>
+      <p class="brand-note" id="header-note">Admin</p>
+    </header>
+
+    <main id="auth-view" class="auth-stage">
+      <form id="auth-form" class="panel auth-panel" autocomplete="on">
+        <p class="eyebrow">Служебный контур</p>
+        <h1>Вход в панель</h1>
+        <p class="lede auth-lede">
+          Доступ по логину и паролю. После входа браузер хранит JWT-токен
+          и подставляет его в запросы к API.
+        </p>
+        <label>
+          <span>Логин</span>
+          <input
+            id="auth-login"
+            name="login"
+            autocomplete="username"
+            required
+            minlength="3"
+            maxlength="64"
+          />
+        </label>
+        <label>
+          <span>Пароль</span>
+          <input
+            id="auth-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            minlength="8"
+            maxlength="128"
+          />
+        </label>
+        <p id="auth-error" class="error" hidden></p>
+        <button type="submit" class="submit" id="login-btn">Войти</button>
+        <button type="button" class="ghost" id="register-btn" hidden>
+          Зарегистрироваться
+        </button>
+        <p class="footnote">
+          Кнопка регистрации доступна, только пока в базе нет ни одного администратора.
+        </p>
+      </form>
+    </main>
+
+    <main id="panel-view" class="admin-stage" hidden>
+      <aside class="admin-side panel">
+        <p class="eyebrow">Панель</p>
+        <h2 id="admin-hello">Кабинет</h2>
+        <nav class="admin-nav">
+          <button type="button" class="nav-btn is-on" data-tab="leads">Заявки</button>
+          <button type="button" class="nav-btn" data-tab="services">Услуги</button>
+          <button type="button" class="nav-btn" data-tab="admins">Администраторы</button>
+        </nav>
+        <button type="button" class="submit compact" id="stats-open">Статистика формы</button>
+        <button type="button" class="ghost" id="logout-btn">Выйти</button>
+        <a class="quiet-link" href="/">На главную</a>
+      </aside>
+
+      <section class="admin-main">
+        <section id="tab-leads" class="panel admin-card">
+          <div class="card-head">
+            <div>
+              <h2>Заявки</h2>
+              <p class="muted">
+                Очередь строится по температуре льда: срочные поднимаются вверх,
+                холодные опускаются. Разбор — по нише, роли, объёму, сроку и бюджету.
+              </p>
+            </div>
+            <button type="button" class="ghost compact" id="apps-refresh">Обновить</button>
+          </div>
+          <p id="apps-error" class="error" hidden></p>
+          <section class="ice-stats" aria-label="Сводка по заявкам">
+            <article class="ice-stat" data-stat="total">
+              <h3>Всего</h3>
+              <p class="ice-stat-value">0</p>
+              <p class="muted ice-stat-note">в очереди</p>
+            </article>
+            <article class="ice-stat is-hot" data-stat="hot">
+              <h3>Раскалённые</h3>
+              <p class="ice-stat-value">0</p>
+              <p class="muted ice-stat-note">в начало списка</p>
+            </article>
+            <article class="ice-stat is-warm" data-stat="warm">
+              <h3>Тающие</h3>
+              <p class="ice-stat-value">0</p>
+              <p class="muted ice-stat-note">обычная очередь</p>
+            </article>
+            <article class="ice-stat is-cold" data-stat="cold">
+              <h3>Мёрзлые</h3>
+              <p class="ice-stat-value">0</p>
+              <p class="muted ice-stat-note">вниз списка</p>
+            </article>
+            <article class="ice-stat" data-stat="vip">
+              <h3>Персональный менеджер</h3>
+              <p class="ice-stat-value">0</p>
+              <p class="muted ice-stat-note">нужен именной контакт</p>
+            </article>
+          </section>
+          <div class="ice-filters" role="tablist" aria-label="Фильтр очереди">
+            <button type="button" class="chip is-on" data-ice-filter="all">Все</button>
+            <button type="button" class="chip" data-ice-filter="hot">Горячие</button>
+            <button type="button" class="chip" data-ice-filter="warm">Средние</button>
+            <button type="button" class="chip" data-ice-filter="cold">Холодные</button>
+            <button type="button" class="chip" data-ice-filter="vip">VIP</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table ice-table" id="leads-table">
+              <thead>
+                <tr>
+                  <th>Лёд</th>
+                  <th>Клиент</th>
+                  <th>Ниша / компания</th>
+                  <th>Бюджет</th>
+                  <th>Срок</th>
+                  <th>Отдел</th>
+                  <th>Разбор</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="leads-empty" class="muted" hidden>Заявок пока нет.</p>
+          <article id="lead-details" class="details ice-details" hidden></article>
+        </section>
+
+        <section id="tab-services" class="panel admin-card" hidden>
+          <h2>Услуги и бюджет</h2>
+          <p class="muted">
+            Таблица текущих записей. Они попадают в выпадающий список на форме заявки.
+            Добавляйте, меняйте и удаляйте услуги прямо здесь.
+          </p>
+          <div class="crud-board">
+            <div class="crud-main">
+              <div class="table-wrap">
+                <table class="data-table crud-table" id="services-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Услуга</th>
+                      <th>Мин. бюджет</th>
+                      <th>Макс. бюджет</th>
+                      <th>Обновлено</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p id="services-empty" class="muted" hidden>
+                Услуг пока нет. Нажмите «Добавить», чтобы создать первую запись.
+              </p>
+              <p id="service-error" class="error" hidden></p>
+            </div>
+            <aside class="crud-toolbar" aria-label="Действия с услугами">
+              <p class="eyebrow">Инструменты</p>
+              <p id="service-toolbar-hint" class="crud-hint">Выберите строку</p>
+              <button type="button" class="tool" id="service-add">Добавить</button>
+              <button type="button" class="tool" id="service-edit">Изменить</button>
+              <button type="button" class="tool" id="service-save">Сохранить</button>
+              <button type="button" class="tool" id="service-cancel">Отмена</button>
+              <button type="button" class="tool is-danger" id="service-delete">Удалить</button>
+              <button type="button" class="tool" id="service-refresh">Обновить</button>
+            </aside>
+          </div>
+        </section>
+
+        <section id="tab-admins" class="panel admin-card" hidden>
+          <h2>Администраторы</h2>
+          <p class="muted">Новых сотрудников можно добавить только из этой вкладки — с публичной страницы входа регистрация уже закрыта.</p>
+          <ul id="admins-list" class="stack-list"></ul>
+          <form id="admin-form" class="mini-form">
+            <h3>Добавить администратора</h3>
+            <label>
+              <span>Логин</span>
+              <input id="new-admin-login" autocomplete="off" required minlength="3" />
+            </label>
+            <label>
+              <span>Пароль</span>
+              <input id="new-admin-password" type="password" autocomplete="new-password" required minlength="8" />
+            </label>
+            <p id="admin-error" class="error" hidden></p>
+            <button type="submit" class="submit compact">Создать</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <div id="stats-modal" class="stats-modal" hidden>
+      <div class="stats-sheet">
+        <header class="stats-head">
+          <div>
+            <p class="eyebrow">Форма заявки</p>
+            <h2>Статистика пользователей</h2>
+          </div>
+          <button type="button" class="ghost compact" id="stats-close">Закрыть</button>
+        </header>
+        <p id="stats-error" class="error" hidden></p>
+        <section class="stats-cards" aria-label="Время на странице">
+          <article class="stats-card" data-period="day">
+            <h3>День</h3>
+            <p class="stats-avg">—</p>
+            <p class="stats-max muted">—</p>
+          </article>
+          <article class="stats-card" data-period="week">
+            <h3>Неделя</h3>
+            <p class="stats-avg">—</p>
+            <p class="stats-max muted">—</p>
+          </article>
+          <article class="stats-card" data-period="month">
+            <h3>Месяц</h3>
+            <p class="stats-avg">—</p>
+            <p class="stats-max muted">—</p>
+          </article>
+        </section>
+        <section class="heatmap-panel">
+          <div class="heatmap-legend">
+            <h3>Хитмап курсора</h3>
+            <p class="muted">Кружки — места, где мышь бывает чаще. Чем крупнее и темнее, тем популярнее зона на странице заказа.</p>
+            <p class="heat-scale" aria-hidden="true"><span>редко</span><i></i><span>часто</span></p>
+          </div>
+          <div class="heatmap-canvas-wrap">
+            <canvas id="heatmap-canvas" aria-label="Двумерный график позиций курсора"></canvas>
+            <p id="heatmap-empty" class="muted heatmap-empty" hidden>
+              Пока нет координат курсора. Откройте главную форму заявки — точки появятся здесь.
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script type="module" src="/src/admin.js"></script>
+  </body>
+</html>

@@ -49,6 +49,7 @@ else
     PGA_BASIC_PASS="$(rand 20 20)"
     # Отдельный пароль реестру не генерируется: он ссылается на пароль БД.
     REG_SECRET="$(rand 32 32)"
+    JWT_SECRET="$(rand 48 48)"
 
     cat > .env <<EOF
 # Сгенерировано scripts/bootstrap.sh $(date -Is)
@@ -77,6 +78,10 @@ PGADMIN_BASIC_PASSWORD=${PGA_BASIC_PASS}
 REGISTRY_USER=admin
 REGISTRY_PASSWORD=\${POSTGRES_PASSWORD}
 REGISTRY_HTTP_SECRET=${REG_SECRET}
+
+# Секрет подписи JWT для админ-панели.
+JWT_SECRET=${JWT_SECRET}
+JWT_EXPIRE_HOURS=12
 
 WATCHTOWER_INTERVAL=300
 # Кавычки обязательны: значение с пробелами ломает \`source .env\` без них.

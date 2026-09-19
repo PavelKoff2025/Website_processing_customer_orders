@@ -1,0 +1,49 @@
+---
+description: После правок бэкенда и фронтенда сразу пересобирать сервисы из своих папок
+alwaysApply: true
+---
+
+# Пересборка после изменений
+
+После каждого изменения файлов Backend сразу пересобирай и перезапускай контейнер. После каждого изменения Frontend сразу собирай статику. Команды выполняются в разных папках — не переключайся через `cd` в одном терминале.
+
+## Backend
+
+Рабочая папка: корень проекта (`Autéllo_Barskiy`, там `docker-compose.yml`).
+
+```bash
+docker compose up --build -d backend
+```
+
+Не используй устаревший `docker-compose` через дефис.
+
+## Frontend
+
+Рабочая папка: `frontend`.
+
+```bash
+npm run build
+```
+
+Сборка кладёт файлы в `frontend/dist/`; Nginx отдаёт их сразу, контейнер фронта перезапускать не нужно.
+
+## Как вызывать
+
+Два отдельных вызова Shell с разным `working_directory`:
+
+- корень репозитория → Docker
+- `frontend` → `npm run build`
+
+Если менялись и бэкенд, и фронтенд — запускай обе команды (можно параллельно).
+
+## Логи при ошибках
+
+Если контейнер не поднимается, API отдаёт 500 или поведение странное — сразу смотри логи, не гадай:
+
+```bash
+docker compose logs -f backend
+```
+
+`-f` — поток в реальном времени. Без `-f` и с хвостом: `docker compose logs --tail 100 backend`.
+
+Типичный пример: в логах `email-validator is not installed, run pip install 'pydantic[email]'` — в `backend/requirements.txt` должна быть строка `pydantic[email]==…`, после этого снова `docker compose up --build -d backend`.

@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.security import require_admin
 from models.behavior import LeadBehaviorCRUD
 from models.lead import LeadCRUD
 
@@ -113,14 +114,20 @@ def create_lead(payload: LeadIn) -> dict[str, Any]:
 
 @router.get("", response_model=list[LeadOut])
 def list_leads(
-    limit: int = Query(default=100, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=5000),
+    skip: int = Query(default=0, ge=0),
+    offset: int | None = Query(default=None, ge=0),
+    _admin: dict[str, Any] = Depends(require_admin),
 ) -> list[dict[str, Any]]:
-    return LeadCRUD.list_all(limit=limit, offset=offset)
+    start = offset if offset is not None else skip
+    return LeadCRUD.list_all(limit=limit, offset=start)
 
 
 @router.get("/{lead_id}", response_model=LeadPackageOut)
-def get_lead(lead_id: int) -> dict[str, Any]:
+def get_lead(
+    lead_id: int,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     lead = LeadCRUD.get_by_id(lead_id)
     if lead is None:
         raise HTTPException(status_code=404, detail="Заявка не найдена.")
@@ -128,7 +135,11 @@ def get_lead(lead_id: int) -> dict[str, Any]:
 
 
 @router.put("/{lead_id}", response_model=LeadOut)
-def update_lead(lead_id: int, payload: LeadUpdate) -> dict[str, Any]:
+def update_lead(
+    lead_id: int,
+    payload: LeadUpdate,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     row = LeadCRUD.update(lead_id, payload.model_dump(exclude_unset=True))
     if row is None:
         raise HTTPException(status_code=404, detail="Заявка не найдена.")
@@ -136,7 +147,10 @@ def update_lead(lead_id: int, payload: LeadUpdate) -> dict[str, Any]:
 
 
 @router.delete("/{lead_id}")
-def delete_lead(lead_id: int) -> dict[str, bool]:
+def delete_lead(
+    lead_id: int,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, bool]:
     if not LeadCRUD.delete(lead_id):
         raise HTTPException(status_code=404, detail="Заявка не найдена.")
     return {"deleted": True}

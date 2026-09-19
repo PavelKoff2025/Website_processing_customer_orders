@@ -92,10 +92,8 @@ services:
         hard: 65535
     networks:
       - edge
-    # Реестр больше не проксируется через Nginx, поэтому в зависимостях его нет.
-    depends_on:
-      pgadmin:
-        condition: service_started
+    # pgAdmin/registry вынесены в профиль ops — на закрытом деплое Nginx
+    # не зависит от них и поднимается один.
     healthcheck:
       test: ["CMD", "wget", "-qO-", "--no-check-certificate", "https://127.0.0.1/healthz"]
       interval: 30s
@@ -146,12 +144,13 @@ services:
     shm_size: 256mb
 
   # ===========================================================================
-  #  PGADMIN — веб-интерфейс к БД. Наружу не публикуется:
-  #  доступен только как https://<host>/pgadmin/ через Nginx (+ Basic-Auth).
+  #  PGADMIN — выключен на закрытом деплое (ДЗ п.5).
+  #  Поднять вручную: docker compose --profile ops up -d pgadmin
   # ===========================================================================
   pgadmin:
     image: dpage/pgadmin4:8.12
     container_name: autello_pgadmin
+    profiles: ["ops"]
     <<: *hardening
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
@@ -199,6 +198,7 @@ services:
   registry:
     image: registry:2.8
     container_name: autello_registry
+    profiles: ["ops"]
     <<: *hardening
     ports:
       - "${REGISTRY_PORT:-5000}:5000"
@@ -271,6 +271,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE_HOURS: ${JWT_EXPIRE_HOURS:-12}
       # Доверяем заголовкам только от Nginx.
       TRUSTED_PROXIES: "autello_edge"
     expose:
