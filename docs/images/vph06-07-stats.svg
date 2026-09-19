@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" rx="18" fill="#e8e2d6"/>
+  <rect x="10" y="10" width="1180" height="740" rx="14" fill="#f6f3ec"/>
+  <rect x="10" y="10" width="1180" height="36" rx="14" fill="#f3eee4"/>
+  <rect x="10" y="28" width="1180" height="18" fill="#f3eee4"/>
+  <circle cx="32" cy="28" r="5" fill="#e08a7a"/>
+  <circle cx="50" cy="28" r="5" fill="#d4b36a"/>
+  <circle cx="68" cy="28" r="5" fill="#8cbf8a"/>
+  <rect x="92" y="18" width="520" height="20" rx="10" fill="#fff" stroke="rgba(196,160,86,0.35)"/>
+  <text x="108" y="32" fill="#7a7166" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="11">karikovpavel.ru/admin.html · Статистика формы</text>
+  
+  <text x="56" y="96" fill="#8a6a2a" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="12" letter-spacing="3">ФОРМА ЗАЯВКИ</text>
+  <text x="56" y="140" fill="#2b241c" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="32">Статистика пользователей</text>
+  <g font-family="Manrope, ui-sans-serif, system-ui, sans-serif">
+    <rect x="56" y="176" width="340" height="150" rx="22" fill="#fff" stroke="rgba(196,160,86,0.35)"/>
+    <text x="80" y="212" fill="#7a7166" font-size="12">ДЕНЬ</text>
+    <text x="80" y="262" fill="#2b241c" font-size="28">5 мин 43 сек</text>
+    <text x="80" y="292" fill="#7a7166" font-size="13">макс. 8 мин 38 сек · 2 визита</text>
+    <rect x="420" y="176" width="340" height="150" rx="22" fill="#fff" stroke="rgba(196,160,86,0.35)"/>
+    <text x="444" y="212" fill="#7a7166" font-size="12">НЕДЕЛЯ</text>
+    <text x="444" y="262" fill="#2b241c" font-size="28">5 мин 43 сек</text>
+    <text x="444" y="292" fill="#7a7166" font-size="13">макс. 8 мин 38 сек · 2 визита</text>
+    <rect x="784" y="176" width="340" height="150" rx="22" fill="#fff" stroke="rgba(196,160,86,0.35)"/>
+    <text x="808" y="212" fill="#7a7166" font-size="12">МЕСЯЦ</text>
+    <text x="808" y="262" fill="#2b241c" font-size="28">5 мин 43 сек</text>
+    <text x="808" y="292" fill="#7a7166" font-size="13">макс. 8 мин 38 сек · 2 визита</text>
+  </g>
+  <text x="56" y="380" fill="#2b241c" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="22">Хитмап курсора</text>
+  <text x="56" y="408" fill="#7a7166" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="13">Кружки — места, где мышь бывает чаще. Данные из behavior_metrics.</text>
+  <rect x="56" y="428" width="1088" height="260" rx="22" fill="#f3eee6" stroke="rgba(196,160,86,0.35)"/>
+  <circle cx="220" cy="560" r="54" fill="rgba(139,90,43,0.22)"/>
+  <circle cx="390" cy="520" r="38" fill="rgba(139,90,43,0.18)"/>
+  <circle cx="560" cy="600" r="70" fill="rgba(139,90,43,0.28)"/>
+  <circle cx="740" cy="540" r="32" fill="rgba(139,90,43,0.16)"/>
+  <circle cx="880" cy="610" r="46" fill="rgba(139,90,43,0.2)"/>
+  <text x="600" y="655" text-anchor="middle" fill="#7a7166" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="12">живые координаты курсора с главной, сессия &gt; 2 минут</text>
+
+</svg>

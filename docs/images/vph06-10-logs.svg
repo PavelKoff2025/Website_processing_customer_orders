@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="520" viewBox="0 0 1480 520">
+  <rect width="1480" height="520" fill="#0b0e13"/>
+  <g>
+    <rect x="16" y="16" width="716" height="488" rx="14" fill="#0d1117"/>
+    <rect x="16" y="16" width="716" height="36" rx="14" fill="#161b22"/>
+    <rect x="16" y="36" width="716" height="16" fill="#161b22"/>
+    <circle cx="38" cy="34" r="6" fill="#ff5f56"/><circle cx="58" cy="34" r="6" fill="#ffbd2e"/><circle cx="78" cy="34" r="6" fill="#27c93f"/>
+    <text x="104" y="39" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">терминал 1 — docker compose logs -f backend</text>
+    <text x="36" y="80" fill="#3fb950" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  GET /healthz HTTP/1.1  200 OK</text>
+    <text x="36" y="108" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  GET /api/behavior-metrics/?skip=0&amp;limit=100  200 OK</text>
+    <text x="36" y="136" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  GET /api/behavior-metrics/?skip=100&amp;limit=100 200 OK</text>
+    <text x="36" y="164" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  GET /api/applications/?skip=0&amp;limit=100     200 OK</text>
+    <text x="36" y="192" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  GET /api/admin                               200 OK</text>
+    <text x="36" y="220" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  POST /api/admin                              201 Created</text>
+    <text x="36" y="248" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  PUT  /api/admin/5                            200 OK</text>
+    <text x="36" y="276" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  DELETE /api/admin/6                          200 OK</text>
+    <text x="36" y="304" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  POST /api/auth/login                         200 OK</text>
+    <text x="36" y="332" fill="#ffa198" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">INFO  POST /api/auth/register                      403 Forbidden</text>
+    <text x="36" y="380" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">JSON-логи uvicorn, без 500. Контейнер autello_backend.</text>
+  </g>
+  <g>
+    <rect x="748" y="16" width="716" height="488" rx="14" fill="#0d1117"/>
+    <rect x="748" y="16" width="716" height="36" rx="14" fill="#161b22"/>
+    <rect x="748" y="36" width="716" height="16" fill="#161b22"/>
+    <circle cx="770" cy="34" r="6" fill="#ff5f56"/><circle cx="790" cy="34" r="6" fill="#ffbd2e"/><circle cx="810" cy="34" r="6" fill="#27c93f"/>
+    <text x="836" y="39" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13">терминал 2 — docker logs -f autello_nginx</text>
+    <text x="768" y="80" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /docs                         HTTP/2.0  200</text>
+    <text x="768" y="108" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /api/admin                    HTTP/2.0  200  1143</text>
+    <text x="768" y="136" fill="#79c0ff" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /pgadmin/                     HTTP/2.0  403  17   pgadmin_disabled</text>
+    <text x="768" y="164" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /                             HTTP/1.1  301  → https</text>
+    <text x="768" y="192" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /api/auth/check               HTTP/2.0  200</text>
+    <text x="768" y="220" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /api/behavior-metrics/?skip=0 HTTP/2.0  200  6355</text>
+    <text x="768" y="248" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">POST /pgadmin/misc/cleanup         HTTP/2.0  403  17</text>
+    <text x="768" y="276" fill="#c9d1d9" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">GET  /api/applications/?skip=0&amp;limit=100  200 JSON</text>
+    <text x="768" y="380" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">access_log combined; JSON API проходит через Nginx :443.</text>
+  </g>
+</svg>

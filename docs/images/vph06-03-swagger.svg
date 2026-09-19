@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" rx="18" fill="#e8e2d6"/>
+  <rect x="10" y="10" width="1260" height="700" rx="14" fill="#f6f3ec"/>
+  <rect x="10" y="10" width="1260" height="36" rx="14" fill="#f3eee4"/>
+  <rect x="10" y="28" width="1260" height="18" fill="#f3eee4"/>
+  <circle cx="32" cy="28" r="5" fill="#e08a7a"/>
+  <circle cx="50" cy="28" r="5" fill="#d4b36a"/>
+  <circle cx="68" cy="28" r="5" fill="#8cbf8a"/>
+  <rect x="92" y="18" width="520" height="20" rx="10" fill="#fff" stroke="rgba(196,160,86,0.35)"/>
+  <text x="108" y="32" fill="#7a7166" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="11">karikovpavel.ru/docs</text>
+  
+  <rect x="24" y="56" width="1232" height="48" fill="#1b1b1b"/>
+  <text x="48" y="88" fill="#fff" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="18">Autello Backend</text>
+  <rect x="1080" y="66" width="150" height="28" rx="6" fill="#49cc90"/>
+  <text x="1155" y="85" text-anchor="middle" fill="#083" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="12">Authorize</text>
+  <text x="48" y="140" fill="#7a7166" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="13">OpenAPI 3 · JWT bearer · статика без CDN, отдаёт Nginx /static/</text>
+  <g font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="14">
+    <rect x="48" y="168" width="1184" height="44" rx="8" fill="#eaf6ea"/>
+    <text x="68" y="196" fill="#3b7"><tspan font-weight="700">POST</tspan>   /api/auth/login</text>
+    <rect x="48" y="220" width="1184" height="44" rx="8" fill="#eaf2fb"/>
+    <text x="68" y="248" fill="#3a6ea5"><tspan font-weight="700">GET</tspan>    /api/applications/</text>
+    <rect x="48" y="272" width="1184" height="44" rx="8" fill="#eaf2fb"/>
+    <text x="68" y="300" fill="#3a6ea5"><tspan font-weight="700">GET</tspan>    /api/admin</text>
+    <rect x="48" y="324" width="1184" height="44" rx="8" fill="#eaf6ea"/>
+    <text x="68" y="352" fill="#3b7"><tspan font-weight="700">POST</tspan>   /api/admin</text>
+    <rect x="48" y="376" width="1184" height="44" rx="8" fill="#fbf2ea"/>
+    <text x="68" y="404" fill="#b36b1a"><tspan font-weight="700">PUT</tspan>    /api/admin/{id}</text>
+    <rect x="48" y="428" width="1184" height="44" rx="8" fill="#fbeaea"/>
+    <text x="68" y="456" fill="#a33"><tspan font-weight="700">DELETE</tspan> /api/admin/{id}</text>
+    <rect x="48" y="480" width="1184" height="44" rx="8" fill="#eaf2fb"/>
+    <text x="68" y="508" fill="#3a6ea5"><tspan font-weight="700">GET</tspan>    /api/behavior-metrics/</text>
+  </g>
+  <text x="48" y="580" fill="#7a7166" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="13">localhost:8000/docs с хоста не открывается — порт backend не опубликован (п.5).</text>
+  <text x="48" y="604" fill="#2b241c" font-family="Manrope, ui-sans-serif, system-ui, sans-serif" font-size="13">Рабочий адрес преподавателя: https://karikovpavel.ru/docs</text>
+
+</svg>
